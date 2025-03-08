@@ -1,3 +1,19 @@
+TODO 
+
+
+A2C, PPO for continuous actions
+DQN, DoubleDQN, D3QN for discrete actions
+
+[참고 Notebook](https://github.com/AI4Finance-Foundation/FinRL-Tutorials/blob/master/2-Advance/FinRL_Ensemble_StockTrading_ICAIF_2020.ipynb)
+
+### Todo
+
+- [ ] `/finrl/meta/env_stock_trading` 정하기: np 버전 or vanilla 버전?
+- [ ] `action`, `reward` 수정   
+- [ ] `trainV2.py` 완성 
+
+
+
 This folder has three subfolders:
 + applications: trading tasks,
 + agents: DRL algorithms, from ElegantRL, RLlib, or Stable Baselines 3 (SB3). Users can plug in any DRL lib and play.
