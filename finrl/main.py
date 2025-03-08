@@ -58,7 +58,9 @@ def main() -> int:
 
     if options.mode == "train":
         from finrl import train
+        import pandas as pd
 
+        dataset = pd.read_csv('dataset_name.csv')
         env = StockTradingEnv
 
         # demo for elegantrl
@@ -66,17 +68,13 @@ def main() -> int:
             {}
         )  # in current meta, with respect yahoofinance, kwargs is {}. For other data sources, such as joinquant, kwargs is not empty
         train(
-            start_date=TRAIN_START_DATE,
-            end_date=TRAIN_END_DATE,
-            ticker_list=DOW_30_TICKER,
-            data_source="yahoofinance",
+            dataset=dataset,
             time_interval="1D",
             technical_indicator_list=INDICATORS,
-            drl_lib="elegantrl",
             env=env,
             model_name="ppo", # DQN, Double DQN, Dueling DQN, A2C, PPO
-            cwd="./test_ppo",
-            erl_params=ERL_PARAMS,
+            cwd="./test_ppo",           #여기부터 **kwargs 시작인듯
+            erl_params=ERL_PARAMS,      # 모델에 알맞게 파라미터 변경
             break_step=1e5,
             kwargs=kwargs,
         )
