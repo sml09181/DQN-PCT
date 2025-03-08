@@ -303,8 +303,7 @@ class StockTradingEnv(gym.Env):
             actions = actions * self.hmax  # actions initially is scaled between 0 to 1 # [-1,1] → [-hmax, hmax]
             actions = actions.astype(
                 int
-            )  # convert into integer because we can't by fraction of shares 
-            # 예: hmax=100 → action=0.5 → 50주
+            )  # convert into integer because we can't by fraction of shares
             if self.turbulence_threshold is not None:
                 # 변동성 임계치 초과 시 전량 매도
                 if self.turbulence >= self.turbulence_threshold:

@@ -19,10 +19,7 @@ reward_scaling : 리워드 스케일링
 TRAINED_MODEL_DIR : 학습된 모델 결과 저장 루트
 RESULTS_DIR : 학습 과정, 결과 저장 루트
 if_using_a2c : A2C 학습 유무 
-if_using_ddpg : DDPG 학습 유뮤
 if_using_ppo : PPO 학습 유무
-if_using_td3 : TD3 학습 유무 
-if_using_sac : SAC 학습 유무
 '''
 def train(dataset, 
             hmax, 
@@ -31,10 +28,8 @@ def train(dataset,
             TRAINED_MODEL_DIR,
             RESULTS_DIR,
             if_using_a2c, 
-            if_using_ddpg, 
             if_using_ppo, 
-            if_using_td3, 
-            if_using_sac):
+    ):
     
     """
     data preprocessing 
@@ -157,43 +152,3 @@ def train(dataset,
                                 tb_log_name='ppo',
                                 total_timesteps=200000) 
         trained_ppo.save(TRAINED_MODEL_DIR + "/agent_ppo") 
-
-    # td3
-    if if_using_td3:
-        TD3_PARAMS = {"batch_size": 100, 
-                    "buffer_size": 1000000, 
-                    "learning_rate": 0.001}
-
-        model_td3 = agent.get_model("td3",model_kwargs = TD3_PARAMS)
-        # set up logger
-        tmp_path = RESULTS_DIR + '/td3'
-        new_logger_td3 = configure(tmp_path, ["stdout", "csv", "tensorboard"])
-        # Set new logger
-        model_td3.set_logger(new_logger_td3)
-    
-        trained_td3 = agent.train_model(model=model_td3, 
-                                tb_log_name='td3',
-                                total_timesteps=50000)
-        trained_td3.save(TRAINED_MODEL_DIR + "/agent_td3")
-
-    # sac
-    if if_using_sac:
-        SAC_PARAMS = {
-            "batch_size": 128,
-            "buffer_size": 100000,
-            "learning_rate": 0.0001,
-            "learning_starts": 100,
-            "ent_coef": "auto_0.1",
-        }
-
-        model_sac = agent.get_model("sac",model_kwargs = SAC_PARAMS)
-        # set up logger
-        tmp_path = RESULTS_DIR + '/sac'
-        new_logger_sac = configure(tmp_path, ["stdout", "csv", "tensorboard"])
-        # Set new logger
-        model_sac.set_logger(new_logger_sac)
-    
-        trained_sac = agent.train_model(model=model_sac, 
-                                tb_log_name='sac',
-                                total_timesteps=70000) 
-        trained_sac.save(TRAINED_MODEL_DIR + "/agent_sac") 

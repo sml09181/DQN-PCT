@@ -4,6 +4,8 @@ import os
 from argparse import ArgumentParser
 from typing import List
 
+import init_paths # ModuleNotFoundError: No module named 'finrl' 에러 해결
+
 from finrl.config import ALPACA_API_BASE_URL
 from finrl.config import DATA_SAVE_DIR
 from finrl.config import ERL_PARAMS
