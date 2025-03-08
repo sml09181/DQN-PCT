@@ -74,7 +74,7 @@ def main() -> int:
             technical_indicator_list=INDICATORS,
             drl_lib="elegantrl",
             env=env,
-            model_name="ppo",
+            model_name="ppo", # DQN, Double DQN, Dueling DQN, A2C, PPO
             cwd="./test_ppo",
             erl_params=ERL_PARAMS,
             break_step=1e5,

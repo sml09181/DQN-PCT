@@ -300,13 +300,15 @@ class StockTradingEnv(gym.Env):
             return self.state, self.reward, self.terminal, False, {}
 
         else:
-            actions = actions * self.hmax  # actions initially is scaled between 0 to 1
+            actions = actions * self.hmax  # actions initially is scaled between 0 to 1 # [-1,1] → [-hmax, hmax]
             actions = actions.astype(
                 int
             )  # convert into integer because we can't by fraction of shares
             if self.turbulence_threshold is not None:
+                # 변동성 임계치 초과 시 전량 매도
                 if self.turbulence >= self.turbulence_threshold:
                     actions = np.array([-self.hmax] * self.stock_dim)
+            # reward = 총 자산 변화량
             begin_total_asset = self.state[0] + sum(
                 np.array(self.state[1 : (self.stock_dim + 1)])
                 * np.array(self.state[(self.stock_dim + 1) : (self.stock_dim * 2 + 1)])
