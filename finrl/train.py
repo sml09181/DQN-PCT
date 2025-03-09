@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import os
 import pandas as pd
 from finrl.meta.preprocessor.preprocessors import FeatureEngineer, data_split
 from finrl import config_tickers
 import itertools
 
-from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
+from finrl.meta.env_stock_trading.env_stocktrading import *
 from finrl.agents.stablebaselines3.models import DRLAgent
 # construct environment
 
@@ -18,6 +19,7 @@ def train(
     model_save_path,
     agent_kwargs,
     env_kwargs,
+    logger,
     if_vix=True
 ):
     fe = FeatureEngineer(use_technical_indicator=True,
@@ -65,9 +67,8 @@ def train(
         "tech_indicator_list": technical_indicator_list,      #사용될 기술 지표 리스트
         "action_space": stock_dimension,        #action space 크기
     }
-
     # environment 초기화 => stock trading simulation을 위한 세팅 완료
-    e_train_gym = StockTradingEnv(df = dataset, **env_kwargs,**extra_env_kwargs)
+    e_train_gym = env(df = dataset, model_name=model_name, mode='train', logger=logger, **env_kwargs,**extra_env_kwargs)
     #OpenAI Gym의 스타일로 환경 변환
     env_instance, _ = e_train_gym.get_sb_env()
 
@@ -81,9 +82,9 @@ def train(
     trained_model = agent.train_model(
         model=model, tb_log_name=model_name, total_timesteps=total_timesteps
     )
-    print("Training is finished!")
+    logger.info("Training is finished!")
     trained_model.save(cwd)
-    print("Trained model is saved in " + str(cwd))
+    logger.info("Trained model is saved in " + str(os.getcwd()))
 
 
 """

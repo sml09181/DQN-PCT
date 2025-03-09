@@ -6,20 +6,19 @@ import time
 import numpy as np
 import pandas as pd
 from stable_baselines3 import A2C
-from stable_baselines3 import DDPG
 from stable_baselines3 import PPO
-from stable_baselines3 import SAC
-from stable_baselines3 import TD3
+from stable_baselines3 import DQN
+
 from stable_baselines3.common.callbacks import BaseCallback
 from stable_baselines3.common.noise import NormalActionNoise
 from stable_baselines3.common.noise import OrnsteinUhlenbeckActionNoise
 from stable_baselines3.common.vec_env import DummyVecEnv
 
 from finrl import config
-from finrl.meta.env_stock_trading.env_stocktrading import StockTradingEnv
+from finrl.meta.env_stock_trading.env_stocktrading import *
 from finrl.meta.preprocessor.preprocessors import data_split
 
-MODELS = {"a2c": A2C, "ppo": PPO}
+MODELS = {"a2c": A2C, "ppo": PPO, 'dqn': DQN}
 
 MODEL_KWARGS = {x: config.__dict__[f"{x.upper()}_PARAMS"] for x in MODELS.keys()}
 

@@ -149,3 +149,8 @@ papertrading_test.py
 alpaca_processor_test.py
 /finrl/config_private.py
 .history/
+
+results/
+tensorboard_log/
+trained/
+trained_models/
