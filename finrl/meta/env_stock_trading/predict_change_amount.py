@@ -1,3 +1,18 @@
+'''
+new setting 
+
+각 step별 해당 종목 종가의 변동률이 얼마나 될지 
+사용자의 초기 투자금X
+
+[continuous]
+[-1, 1]
+
+[discrete]
+1) 3개 action: [-1, 0, 1]
+2) 5개 action: [buy more, buy, 0, sell, sell more]
+-> discrete으로 나누기 전의 원본 값으로 전날 대비 변동률 예측 
+'''
+
 from __future__ import annotations
 
 from typing import List
@@ -303,7 +318,8 @@ class StockTradingEnv(gym.Env):
             actions = actions * self.hmax  # actions initially is scaled between 0 to 1 # [-1,1] → [-hmax, hmax]
             actions = actions.astype(
                 int
-            )  # convert into integer because we can't by fraction of shares
+            )  # convert into integer because we can't by fraction of shares 
+            # 예: hmax=100 → action=0.5 → 50주
             if self.turbulence_threshold is not None:
                 # 변동성 임계치 초과 시 전량 매도
                 if self.turbulence >= self.turbulence_threshold:
