@@ -7,6 +7,9 @@ TRAINED_MODEL_DIR = "trained_models"
 TENSORBOARD_LOG_DIR = "tensorboard_log"
 RESULTS_DIR = "results"
 
+FEATURE = 'BASEIPD' # BASEIPD, BASE
+DATASET = '372320.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
+
 # date format: '%Y-%m-%d'
 TRAIN_START_DATE = "2014-01-06"  # bug fix: set Monday right, start date set 2014-01-01 ValueError: all the input array dimensions for the concatenation axis must match exactly, but along dimension 0, the array at index 0 has size 1658 and the array at index 1 has size 1657
 TRAIN_END_DATE = "2020-07-31"
