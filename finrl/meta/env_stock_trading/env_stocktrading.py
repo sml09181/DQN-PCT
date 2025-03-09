@@ -61,7 +61,7 @@ class StockTradingEnv(gym.Env):
         self.observation_space = spaces.Box(
             low=-np.inf, high=np.inf, shape=(self.state_space,)
         )
-        self.data = self.df.loc[self.day, :]
+        self.data = self.df.iloc[self.day, :]
         self.terminal = False
         self.make_plots = make_plots
         self.print_verbosity = print_verbosity
@@ -335,7 +335,7 @@ class StockTradingEnv(gym.Env):
 
             # state: s -> s+1
             self.day += 1
-            self.data = self.df.loc[self.day, :]
+            self.data = self.df.iloc[self.day, :]
             if self.turbulence_threshold is not None:
                 if len(self.df.tic.unique()) == 1:
                     self.turbulence = self.data[self.risk_indicator_col]
@@ -366,7 +366,7 @@ class StockTradingEnv(gym.Env):
     ):
         # initiate state
         self.day = 0
-        self.data = self.df.loc[self.day, :]
+        self.data = self.df.iloc[self.day, :]
         self.state = self._initiate_state()
 
         if self.initial:
@@ -486,9 +486,9 @@ class StockTradingEnv(gym.Env):
 
     def _get_date(self):
         if len(self.df.tic.unique()) > 1:
-            date = self.data.date.unique()[0]
+            date = self.data[0].unique()[0]
         else:
-            date = self.data.date
+            date = self.data[0]
         return date
 
     # add save_state_memory to preserve state in the trading process
