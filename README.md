@@ -49,3 +49,31 @@ FinRL
 │   ├── trade.py
 │   └── plot.py
 ```
+
+
+self.asset_memory = [
+            self.initial_amount
+            + np.sum(
+                np.array(self.num_stock_shares)
+                * np.array(self.state[1 : 1 + self.stock_dim])
+            )
+        ]  # the initial total asset is calculated by cash + sum (num_share_stock_i * price_stock_i)
+
+def _initiate_state(self):
+    return [
+        self.initial_amount,
+        *self.data.close.values,
+        *self.num_stock_shares,
+        *[self.data[tech] for tech in self.tech_indicator_list]
+    ]
+
+# env_stocktrading.py의 reward 계산
+self.reward = end_total_asset - begin_total_asset
+self.reward = self.reward * self.reward_scaling
+
+
+initial_amount = 0
+1. 연속형
+2. 이산형
+    - 3가지
+    - 5가지 

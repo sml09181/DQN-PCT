@@ -1,3 +1,18 @@
+'''
+new setting 
+
+각 step별 해당 종목 종가의 변동률이 얼마나 될지 
+사용자의 초기 투자금X
+
+[continuous]
+[-1, 1]
+
+[discrete]
+1) 3개 action: [-1, 0, 1]
+2) 5개 action: [buy more, buy, 0, sell, sell more]
+-> discrete으로 나누기 전의 원본 값으로 전날 대비 변동률 예측 
+'''
+
 from __future__ import annotations
 
 from typing import List
