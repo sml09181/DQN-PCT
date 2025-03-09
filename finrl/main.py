@@ -21,6 +21,8 @@ from finrl.config import TRADE_START_DATE
 from finrl.config import TRAIN_END_DATE
 from finrl.config import TRAIN_START_DATE
 from finrl.config import TRAINED_MODEL_DIR
+from finrl.config import FEATURE
+from finrl.config import DATASET
 from finrl.config_tickers import DOW_30_TICKER
 from finrl.meta.env_stock_trading.env_stocktrading_np import StockTradingEnv
 
@@ -33,6 +35,7 @@ from finrl.meta.env_stock_trading.env_stocktrading_np import StockTradingEnv
 #         "Please set your own ALPACA_API_KEY and ALPACA_API_SECRET in config_private.py"
 #     )
 
+
 def build_parser():
     parser = ArgumentParser()
     parser.add_argument(
@@ -44,15 +47,17 @@ def build_parser():
     )
     return parser
 
+
 # "./" will be added in front of each directory
 def check_and_make_directories(directories: list[str]):
     for directory in directories:
         if not os.path.exists("./" + directory):
             os.makedirs("./" + directory)
 
+
 def main() -> int:
     os.environ["CUDA_VISIBLE_DEVICES"] = str(GPU_ID)
-    
+
     parser = build_parser()
     options = parser.parse_args()
     check_and_make_directories(
@@ -63,7 +68,11 @@ def main() -> int:
         from finrl import train
         import pandas as pd
 
-        dataset = pd.read_csv("/data/sujin/IPO/data/372320.csv")
+        if FEATURE=='BASEIPD':
+            dataset = pd.read_csv("/data/sujin/IPO/data/BaseIPO/"+DATASET, encoding='euc-kr')
+        else:
+            dataset = pd.read_csv("/data/sujin/IPO/data/Base/"+DATASET, encoding='euc-kr')
+            
         env = StockTradingEnv
 
         env_kwargs = (
