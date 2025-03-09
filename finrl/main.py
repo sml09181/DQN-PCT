@@ -3,9 +3,11 @@ from __future__ import annotations
 import os
 from argparse import ArgumentParser
 from typing import List
+import torch
 
 import init_paths # ModuleNotFoundError: No module named 'finrl' 에러 해결
 
+from finrl.config import GPU_ID
 from finrl.config import ALPACA_API_BASE_URL
 from finrl.config import DATA_SAVE_DIR
 from finrl.config import ERL_PARAMS
@@ -31,7 +33,6 @@ from finrl.meta.env_stock_trading.env_stocktrading_np import StockTradingEnv
 #         "Please set your own ALPACA_API_KEY and ALPACA_API_SECRET in config_private.py"
 #     )
 
-
 def build_parser():
     parser = ArgumentParser()
     parser.add_argument(
@@ -43,15 +44,15 @@ def build_parser():
     )
     return parser
 
-
 # "./" will be added in front of each directory
 def check_and_make_directories(directories: list[str]):
     for directory in directories:
         if not os.path.exists("./" + directory):
             os.makedirs("./" + directory)
 
-
 def main() -> int:
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(GPU_ID)
+    
     parser = build_parser()
     options = parser.parse_args()
     check_and_make_directories(
