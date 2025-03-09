@@ -55,30 +55,37 @@ def main() -> int:
     parser = build_parser()
     options = parser.parse_args()
     check_and_make_directories(
-        [DATA_SAVE_DIR, TRAINED_MODEL_DIR, TENSORBOARD_LOG_DIR, RESULTS_DIR]
-    )
+        ["./trained"]
+    ) #[DATA_SAVE_DIR, TRAINED_MODEL_DIR, TENSORBOARD_LOG_DIR, RESULTS_DIR]
 
     if options.mode == "train":
         from finrl import train
         import pandas as pd
 
-        dataset = pd.read_csv('dataset_name.csv')
+        dataset = pd.read_csv("/data/sujin/IPO/data/372320.csv")
         env = StockTradingEnv
 
-        # demo for elegantrl
-        kwargs = (
-            {}
-        )  # in current meta, with respect yahoofinance, kwargs is {}. For other data sources, such as joinquant, kwargs is not empty
+        env_kwargs = (
+            {"hmax": 100,                           #한 번에 사고팔 수 있는 최대 주
+             "initial_amount": 1000000,       # 초기 자본
+             "reward_scaling": 1e-4,        #보상 스케일링 (보상이 과도하게 커지는 것 방지)
+            }
+        )
+        agent_kwargs = (
+            { "n_steps": 2048,
+              "ent_coef": 0.01,
+              "learning_rate": 0.00025,
+              "batch_size": 64,
+              "n_epochs" : 3,}
+        )  
         train(
             dataset=dataset,
-            time_interval="1D",
             technical_indicator_list=INDICATORS,
             env=env,
             model_name="ppo", # DQN, Double DQN, Dueling DQN, A2C, PPO
-            cwd="./test_ppo",           #여기부터 **kwargs 시작인듯
-            erl_params=ERL_PARAMS,      # 모델에 알맞게 파라미터 변경
-            break_step=1e5,
-            kwargs=kwargs,
+            model_save_path = "./trained",
+            agent_kwargs = agent_kwargs,
+            env_kwargs=env_kwargs
         )
     elif options.mode == "test":
         from finrl import test
