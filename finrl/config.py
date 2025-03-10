@@ -14,7 +14,7 @@ MODEL = 'dqn' # ppo, a2c, dqn
 if MODEL in ['a2c', 'ppo']: ENV = ContEnv
 else: ENV = Disc7Env # Disc3Env, Disc5Env, Disc7Env
 
-WORKING_ROOT = '/data/sujin/sujin/GlobalStockAnalyzer/' # NOTE: change to your name
+WORKING_ROOT = '/data/sujin/ahyun/GlobalStockAnalyzer/' # NOTE: change to your name
 TIMESTAMP = time.strftime('%m%d_%H%M')
 RESULTS_ROOT = os.path.join(WORKING_ROOT, f'results/{DATASET[:-4]}/{MODEL}/{TIMESTAMP}')
 
@@ -51,7 +51,7 @@ PPO_PARAMS = {
     "ent_coef": 0.01,
     "learning_rate": 0.00025, # 0.00025
     "batch_size": 64,
-    "n_epochs": 50,
+    "n_epochs": 10,
 }
 DQN_PARAMS = {
     "learning_rate": 0.00005, # 0.0001
@@ -75,11 +75,11 @@ AGENT_DICT = {
 AGENT_PARAMS = AGENT_DICT.get(MODEL)
 
 # date format: '%Y-%m-%d'
-TRAIN_START_DATE = "2014-01-06"  # bug fix: set Monday right, start date set 2014-01-01 ValueError: all the input array dimensions for the concatenation axis must match exactly, but along dimension 0, the array at index 0 has size 1658 and the array at index 1 has size 1657
-TRAIN_END_DATE = "2020-07-31"
+TRAIN_START_DATE = "2023-11-09"  # bug fix: set Monday right, start date set 2014-01-01 ValueError: all the input array dimensions for the concatenation axis must match exactly, but along dimension 0, the array at index 0 has size 1658 and the array at index 1 has size 1657
+TRAIN_END_DATE = "2024-03-01" # 여기만 수정하면 됨(아현) 참고로 이 날은 포함이 안 되더라
 
-TEST_START_DATE = "2020-08-01"
-TEST_END_DATE = "2021-10-01"
+TEST_START_DATE = TRAIN_END_DATE 
+TEST_END_DATE = "2024-03-31"
 
 TRADE_START_DATE = "2021-11-01"
 TRADE_END_DATE = "2021-12-01"
