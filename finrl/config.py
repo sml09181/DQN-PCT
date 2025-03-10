@@ -7,14 +7,14 @@ import shutil
 from finrl.meta.env_stock_trading.env_stocktrading import *
 
 # general setting 
-GPU_ID = 2 # int, str 모두 가능 
+GPU_ID = 3 # int, str 모두 가능 
 FEATURE = 'BaseIPO' # BaseIPO, Base
-DATASET = '372320.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
+DATASET = '451760.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
 MODEL = 'dqn' # ppo, a2c, dqn
 if MODEL in ['a2c', 'ppo']: ENV = ContEnv
 else: ENV = Disc7Env # Disc3Env, Disc5Env, Disc7Env
 
-WORKING_ROOT = '/data/sujin/ahyun/GlobalStockAnalyzer/' # NOTE: change to your name
+WORKING_ROOT = '/data/sujin/sujin/GlobalStockAnalyzer/' # NOTE: change to your name
 TIMESTAMP = time.strftime('%m%d_%H%M')
 RESULTS_ROOT = os.path.join(WORKING_ROOT, f'results/{DATASET[:-4]}/{MODEL}/{TIMESTAMP}')
 
@@ -24,10 +24,12 @@ if not os.path.exists(RESULTS_ROOT):
     os.makedirs(f"{RESULTS_ROOT}/total_value")
     os.makedirs(f"{RESULTS_ROOT}/rewards")
     os.makedirs(f"{RESULTS_ROOT}/asset_memory")
+    os.makedirs(f"{RESULTS_ROOT}/agent_log")
     shutil.copy(os.path.join(WORKING_ROOT, 'finrl/config.py'), os.path.join(RESULTS_ROOT, 'config.py'))
 DATA_SAVE_DIR = os.path.join(RESULTS_ROOT, "datasets")
 TRAINED_MODEL_DIR = os.path.join(RESULTS_ROOT, "trained_models")
 TENSORBOARD_LOG_DIR = os.path.join(RESULTS_ROOT, "tensorboard_log")
+AGENT_LOG_DIR = os.path.join(RESULTS_ROOT, "agent_log")
 RESULTS_DIR = "results"
     
 # stockstats technical indicator column names

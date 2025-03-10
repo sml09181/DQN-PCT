@@ -8,9 +8,11 @@ import itertools
 
 from finrl.meta.env_stock_trading.env_stocktrading import *
 from finrl.agents.stablebaselines3.models import DRLAgent
+from stable_baselines3.common.logger import configure
 
 from finrl.config import TRAIN_START_DATE
 from finrl.config import TRAIN_END_DATE
+from finrl.config import AGENT_LOG_DIR
 # construct environment
 
 # dataset : pandas
@@ -86,9 +88,14 @@ def train(
     cwd = model_save_path+"/"+model_name
 
     total_timesteps = agent_kwargs.get("total_timesteps", 1e6)
-
+    
+    
     agent = DRLAgent(env=env_instance)
     model = agent.get_model(model_name, model_kwargs=agent_kwargs)
+    
+    agent_logger = configure(AGENT_LOG_DIR, ["csv", "tensorboard"])
+    model.set_logger(agent_logger)
+    
     trained_model = agent.train_model(
         model=model, tb_log_name=model_name, total_timesteps=total_timesteps
     )
