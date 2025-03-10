@@ -7,10 +7,10 @@ import shutil
 from finrl.meta.env_stock_trading.env_stocktrading import *
 
 # general setting 
-GPU_ID = 3 # int, str 모두 가능 
+GPU_ID = 0 # int, str 모두 가능 
 FEATURE = 'BaseIPO' # BaseIPO, Base
 DATASET = '451760.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
-MODEL = 'dqn' # ppo, a2c, dqn
+MODEL = 'ppo' # ppo, a2c, dqn
 if MODEL in ['a2c', 'ppo']: ENV = ContEnv
 else: ENV = Disc7Env # Disc3Env, Disc5Env, Disc7Env
 
@@ -78,9 +78,9 @@ AGENT_PARAMS = AGENT_DICT.get(MODEL)
 
 # date format: '%Y-%m-%d'
 TRAIN_START_DATE = "2023-11-09"  # bug fix: set Monday right, start date set 2014-01-01 ValueError: all the input array dimensions for the concatenation axis must match exactly, but along dimension 0, the array at index 0 has size 1658 and the array at index 1 has size 1657
-TRAIN_END_DATE = "2024-03-01" # 여기만 수정하면 됨(아현) 참고로 이 날은 포함이 안 되더라
+TRAIN_END_DATE = "2024-03-25" # 여기만 수정하면 됨(아현) 참고로 이 날은 포함이 안 되더라
 
-TEST_START_DATE = TRAIN_END_DATE 
+TEST_START_DATE = "2023-03-25" 
 TEST_END_DATE = "2024-03-31"
 
 TRADE_START_DATE = "2021-11-01"

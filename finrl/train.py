@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import pandas as pd
 from finrl.meta.preprocessor.preprocessors import FeatureEngineer, data_split
-from finrl import config_tickers
 import itertools
 
 from finrl.meta.env_stock_trading.env_stocktrading import *
@@ -66,7 +65,7 @@ def train(
     state_space = 1 + 2*stock_dimension + len(technical_indicator_list)*stock_dimension
 
     # 주식 매수/매도 시 수수료 비율. 0.001=0.1%
-    buy_cost_list = sell_cost_list = [0.001] * stock_dimension
+    buy_cost_list = sell_cost_list = [0.00015] * stock_dimension
     # 초기 주식 보유량
     num_stock_shares = [0] * stock_dimension
 

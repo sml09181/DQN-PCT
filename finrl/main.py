@@ -104,25 +104,24 @@ def main() -> int:
     elif options.mode == "test":
         from finrl import test
 
-        env= ENV
+        dataset = pd.read_csv(f"/data/sujin/IPO/data/{FEATURE}/{DATASET}", encoding='euc-kr')
+        env_kwargs = (
+            {"hmax": 100,                           #한 번에 사고팔 수 있는 최대 주
+             "initial_amount": 1000000,       # 초기 자본
+             "reward_scaling": 1e-4,        #보상 스케일링 (보상이 과도하게 커지는 것 방지)
+            }
+        )
 
-        # demo for elegantrl
-        # in current meta, with respect yahoofinance, kwargs is {}. For other data sources, such as joinquant, kwargs is not empty
-        kwargs = {}
+        logger.info("env_kwargs: %s", env_kwargs)
 
-        account_value_erl = test(  # noqa
-            start_date=TEST_START_DATE,
-            end_date=TEST_END_DATE,
-            ticker_list=DOW_30_TICKER,
-            data_source="yahoofinance",
-            time_interval="1D",
+        account_value_erl = test( 
+            dataset=dataset,
             technical_indicator_list=INDICATORS,
-            drl_lib="stable_baselines3",
-            env=env,
-            model_name=MODEL,
-            cwd=f"./test_{MODEL}",
-            net_dimension=512,
-            kwargs=kwargs,
+            env=ENV,
+            model_name=MODEL, # DQN, Double DQN, Dueling DQN, A2C, PPO
+            model_path = "./trained",    # 모델이 저장된 폴더 이름
+            env_kwargs=env_kwargs,
+            logger=logger,
         )
     else:
         raise ValueError("Wrong mode.")
