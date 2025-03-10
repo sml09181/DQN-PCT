@@ -93,7 +93,7 @@ def train(
     agent = DRLAgent(env=env_instance)
     model = agent.get_model(model_name, model_kwargs=agent_kwargs)
     
-    agent_logger = configure(AGENT_LOG_DIR, ["csv", "tensorboard"])
+    agent_logger = configure(AGENT_LOG_DIR, ["stdout", "csv", "tensorboard"])
     model.set_logger(agent_logger)
     
     trained_model = agent.train_model(
