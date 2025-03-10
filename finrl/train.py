@@ -8,9 +8,13 @@ import itertools
 
 from finrl.meta.env_stock_trading.env_stocktrading import *
 from finrl.agents.stablebaselines3.models import DRLAgent
+
+from finrl.config import TRAIN_START_DATE
+from finrl.config import TRAIN_END_DATE
 # construct environment
 
 # dataset : pandas
+
 def train(
     dataset,
     technical_indicator_list,
@@ -22,6 +26,7 @@ def train(
     logger,
     if_vix=True
 ):
+    
     fe = FeatureEngineer(use_technical_indicator=True,
                      tech_indicator_list = technical_indicator_list,
                      use_vix=if_vix,
@@ -45,6 +50,11 @@ def train(
     # NaN은 0으로 채움
     processed_full = processed_full.fillna(0)
     processed_full['date'] = pd.to_datetime(processed_full['date'])
+    
+    
+    # data_split
+    processed_full = data_split(processed_full, TRAIN_START_DATE, TRAIN_END_DATE)
+
     
     dataset = processed_full.set_index(processed_full.columns[0])
     dataset.index.names=['']
