@@ -3,6 +3,8 @@ __pycache__
 # Custom config
 #results/
 
+config.py
+
 # remove DS_Store
 **/.DS_Store
 
@@ -154,3 +156,4 @@ results/
 tensorboard_log/
 trained/
 trained_models/
+finrl/config.py
