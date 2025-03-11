@@ -719,20 +719,62 @@ class Disc5Env(ContEnv):
         Returns:
             Number of shares sold
         """
-        current_shares = self.state[index + self.stock_dim + 1]
-        sell_pct = 0.3 if action_type == 3 else 0.7 if action_type == 4 else 0.0
+        def _do_sell_normal():
+            current_shares = self.state[index + self.stock_dim + 1]
+            sell_pct_dict = {
+                3: 0.3,
+                4: 0.7,
+                5: 1, # if turbulence goes over threshold, just clear out all positions 
+            }
+            sell_pct = sell_pct_dict.get(action_type, 0)
+            if (
+                    self.state[index + 2 * self.stock_dim + 1] != True
+                ):
+                if sell_pct > 0 and current_shares > 0:
+                    sell_num_shares = min(int(self.hmax * sell_pct), current_shares)
+                    sell_amount = self.state[index + 1] * sell_num_shares * (1 - self.sell_cost_pct[index])
+                    
+                    # Update portfolio state
+                    self.state[0] += sell_amount  # Add cash
+                    self.state[index + self.stock_dim + 1] -= sell_num_shares  # Remove shares
+                    self.cost += self.state[index + 1] * sell_num_shares * self.sell_cost_pct[index]
+                    self.trades += 1
+                    return sell_num_shares
+                    # perform sell action based on the sign of the action
+            return 0
         
-        if sell_pct > 0 and current_shares > 0:
-            sell_num = int(current_shares * sell_pct)
-            sell_amount = self.state[index + 1] * sell_num * (1 - self.sell_cost_pct[index])
-            
-            # Update portfolio state
-            self.state[0] += sell_amount  # Add cash
-            self.state[index + self.stock_dim + 1] -= sell_num  # Remove shares
-            self.cost += self.state[index + 1] * sell_num * self.sell_cost_pct[index]
-            self.trades += 1
-            return sell_num
-        return 0
+        if self.turbulence_threshold is not None:
+            if self.turbulence >= self.turbulence_threshold:
+                if self.state[index + 1] > 0:
+                    # Sell only if the price is > 0 (no missing data in this particular date)
+                    # if turbulence goes over threshold, just clear out all positions
+                    if self.state[index + self.stock_dim + 1] > 0:
+                        # Sell only if current asset is > 0
+                        sell_num_shares = self.state[index + self.stock_dim + 1]
+                        sell_amount = (
+                            self.state[index + 1]
+                            * sell_num_shares
+                            * (1 - self.sell_cost_pct[index])
+                        )
+                        # update balance
+                        self.state[0] += sell_amount
+                        self.state[index + self.stock_dim + 1] = 0
+                        self.cost += (
+                            self.state[index + 1]
+                            * sell_num_shares
+                            * self.sell_cost_pct[index]
+                        )
+                        self.trades += 1
+                    else:
+                        sell_num_shares = 0
+                else:
+                    sell_num_shares = 0
+            else:
+                sell_num_shares = _do_sell_normal()
+        else:
+            sell_num_shares = _do_sell_normal()
+        return sell_num_shares
+        
 
     def _buy_stock(self, index, action_type):
         """Execute buy action based on discrete action type
@@ -742,23 +784,48 @@ class Disc5Env(ContEnv):
         Returns:
             Number of shares bought
         """
-        buy_pct = 0.7 if action_type == 0 else 0.3 if action_type == 1 else 0.0
-        current_shares = self.state[index + self.stock_dim + 1]
-        available_cash = self.state[0]
-        price = self.state[index + 1] * (1 + self.buy_cost_pct[index])
-        
-        # Calculate target shares
-        target_shares = int(current_shares * (1 + buy_pct))
-        buy_num = max(0, target_shares - current_shares)
-        
-        if buy_num > 0 and available_cash >= price * buy_num:
-            self.state[0] -= price * buy_num  # Deduct cash
-            self.state[index + self.stock_dim + 1] += buy_num  # Add shares
-            self.cost += self.state[index + 1] * buy_num * self.buy_cost_pct[index]
-            self.trades += 1
-            return buy_num
-        return 0
+        def _do_buy():
+            if (
+                self.state[index + 2 * self.stock_dim + 1] != True
+            ):  # check if the stock is able to buy
+                # if self.state[index + 1] >0:
+                # Buy only if the price is > 0 (no missing data in this particular date)
+                available_amount = self.state[0] // (
+                    self.state[index + 1] * (1 + self.buy_cost_pct[index])
+                )  # when buying stocks, we should consider the cost of trading when calculating available_amount, or we may be have cash<0
+                # self.logger.info('available_amount:{}'.format(available_amount))
+                
+                # update balance
+                buy_pct = 0.7 if action_type == 0 else 0.3 if action_type == 1 else 0.0
+                buy_num_shares = min(available_amount, int(self.hmax * buy_pct))
+                buy_amount = (
+                    self.state[index + 1]
+                    * buy_num_shares
+                    * (1 + self.buy_cost_pct[index])
+                )
+                self.state[0] -= buy_amount
 
+                self.state[index + self.stock_dim + 1] += buy_num_shares
+
+                self.cost += (
+                    self.state[index + 1] * buy_num_shares * self.buy_cost_pct[index]
+                )
+                self.trades += 1
+                return buy_num_shares
+            else: return 0
+                
+        # perform buy action based on the sign of the action
+        if self.turbulence_threshold is None:
+            buy_num_shares = _do_buy()
+        else:
+            if self.turbulence < self.turbulence_threshold:
+                buy_num_shares = _do_buy()
+            else:
+                buy_num_shares = 0
+                pass
+
+        return buy_num_shares
+        
     def step(self, action):
         """
         Execute one market step with discrete action
@@ -774,30 +841,41 @@ class Disc5Env(ContEnv):
         
         if self.terminal:
             return self._handle_terminal_state()
-            
-        begin_total_asset = self._calculate_total_asset()
 
         # Force sell all if turbulence exceeds threshold
-        if self.turbulence_threshold and self.turbulence >= self.turbulence_threshold:
-            action = 4  # Force maximum sell
+        if self.turbulence_threshold is not None and self.turbulence >= self.turbulence_threshold:
+            action = 5  # Force maximum sell
+        begin_total_asset = self._calculate_total_asset()
 
         # Process action for each stock
+        # 각 주식에 모두 같은 action을 적용한다는 것에 유의 
         for index in range(self.stock_dim):
             if action in [0, 1]:  # Buy actions
-                self._buy_stock(index, action)
-            elif action in [3, 4]:  # Sell actions
-                self._sell_stock(index, action)
+                num_shares = self._buy_stock(index, action)
+            elif action in [3, 4, 5]:  # Sell actions
+                num_shares = self._sell_stock(index, action)
+            else: num_shares = 0
+        # actions = np.full(actions.size, num_shares)
+        self.actions_memory.append(num_shares)
 
         # Update market state
         self.day += 1
         self.data = self.df.iloc[self.day, :]
+        if self.turbulence_threshold is not None:
+            if len(self.df.tic.unique()) == 1:
+                self.turbulence = self.data[self.risk_indicator_col]
+            elif len(self.df.tic.unique()) > 1:
+                self.turbulence = self.data[self.risk_indicator_col].values[0]
         self.state = self._update_state()
 
         # Calculate rewards
         end_total_asset = self._calculate_total_asset()
-        self.reward = (end_total_asset - begin_total_asset) * self.reward_scaling
+        self.reward = end_total_asset - begin_total_asset
         self._update_memories(end_total_asset)
-
+        self.reward *= self.reward_scaling
+        self.state_memory.append(
+                self.state
+            )  # add current state in state_recorder for each step
         return self.state, self.reward, self.terminal, False, {}
         
     def _calculate_total_asset(self):
@@ -815,22 +893,81 @@ class Disc5Env(ContEnv):
 
     def _handle_terminal_state(self):
         """Handle end-of-episode operations"""
+        # self.logger.info(f"Episode: {self.episode}")
         if self.make_plots:
             self._make_plot()
         end_total_asset = self._calculate_total_asset()
-        
-        # Logging and reporting logic
+        df_total_value = pd.DataFrame(self.asset_memory)
+        tot_reward = (
+            self.state[0]
+            + sum(
+                np.array(self.state[1 : (self.stock_dim + 1)])
+                * np.array(
+                    self.state[(self.stock_dim + 1) : (self.stock_dim * 2 + 1)]
+                )
+            )
+            - self.asset_memory[0]
+        )  # initial_amount is only cash part of our initial asset
+        df_total_value.columns = ["account_value"]
+        df_total_value["date"] = self.date_memory
+        df_total_value["daily_return"] = df_total_value["account_value"].pct_change(
+            1
+        )
+        if df_total_value["daily_return"].std() != 0:
+            sharpe = (
+                (252**0.5)
+                * df_total_value["daily_return"].mean()
+                / df_total_value["daily_return"].std()
+            )
+        df_rewards = pd.DataFrame(self.rewards_memory)
+        df_rewards.columns = ["account_rewards"]
+        df_rewards["date"] = self.date_memory[:-1]
         if self.episode % self.print_verbosity == 0:
             self.logger.info(f"day: {self.day}, episode: {self.episode}")
             self.logger.info(f"begin_total_asset: {self.asset_memory[0]:0.2f}")
             self.logger.info(f"end_total_asset: {end_total_asset:0.2f}")
-            self.logger.info(f"total_reward: {end_total_asset - self.asset_memory[0]:0.2f}")
+            self.logger.info(f"total_reward: {tot_reward:0.2f}")
             self.logger.info(f"total_cost: {self.cost:0.2f}")
             self.logger.info(f"total_trades: {self.trades}")
+            if df_total_value["daily_return"].std() != 0:
+                self.logger.info(f"Sharpe: {sharpe:0.3f}")
             self.logger.info("=================================")
-            
-        return self.state, self.reward, self.terminal, False, {}
 
+        if (self.model_name != "") and (self.mode != ""):
+            df_actions = self.save_action_memory()
+            df_actions.to_csv(
+                "./actions/actions_{}_{}_ep{}.csv".format(
+                    self.mode, self.model_name, self.episode
+                )
+            )
+            df_total_value.to_csv(
+                "./total_value/account_value_{}_{}_ep{}.csv".format(
+                    self.mode, self.model_name, self.episode
+                ),
+                index=False,
+            )
+            df_rewards.to_csv(
+                "./rewards/account_rewards_{}_{}_ep{}.csv".format(
+                    self.mode, self.model_name, self.episode
+                ),
+                index=False,
+            )
+            plt.plot(self.asset_memory, "r")
+            plt.savefig(
+                "./asset_memory/account_value_{}_{}_ep{}.png".format(
+                    self.mode, self.model_name, self.episode
+                )
+            )
+            plt.close()
+
+        # Add outputs to logger interface
+        # logger.record("environment/portfolio_value", end_total_asset)
+        # logger.record("environment/total_reward", tot_reward)
+        # logger.record("environment/total_reward_pct", (tot_reward / (end_total_asset - tot_reward)) * 100)
+        # logger.record("environment/total_cost", self.cost)
+        # logger.record("environment/total_trades", self.trades)
+
+        return self.state, self.reward, self.terminal, False, {}
 
 # MARK: Disc7Env    
 class Disc7Env(Disc5Env):
@@ -840,7 +977,7 @@ class Disc7Env(Disc5Env):
         super().__init__(*args, **kwargs)
         # Set discrete action space (0-6)
         self.action_space = spaces.Discrete(7)
-        
+    
     def _sell_stock(self, index, action_type):
         """Execute sell action based on discrete action type
         Args:
@@ -849,26 +986,62 @@ class Disc7Env(Disc5Env):
         Returns:
             Number of shares sold
         """
-        current_shares = self.state[index + self.stock_dim + 1]
+        def _do_sell_normal():
+            current_shares = self.state[index + self.stock_dim + 1]
+            sell_pct = {
+                4: 0.25,
+                5: 0.50,
+                6: 0.75,
+                7: 1,
+            }.get(action_type, 0.0)
+            if (
+                    self.state[index + 2 * self.stock_dim + 1] != True
+                ):
+                if sell_pct > 0 and current_shares > 0:
+                    sell_num_shares = min(int(self.hmax * sell_pct), current_shares)
+                    sell_amount = self.state[index + 1] * sell_num_shares * (1 - self.sell_cost_pct[index])
+                    
+                    # Update portfolio state
+                    self.state[0] += sell_amount  # Add cash
+                    self.state[index + self.stock_dim + 1] -= sell_num_shares  # Remove shares
+                    self.cost += self.state[index + 1] * sell_num_shares * self.sell_cost_pct[index]
+                    self.trades += 1
+                    return sell_num_shares
+                    # perform sell action based on the sign of the action
+            return 0
         
-        # Map action to sell percentage
-        sell_pct = {
-            4: 0.25,
-            5: 0.50,
-            6: 0.75
-        }.get(action_type, 0.0)
-
-        if sell_pct > 0 and current_shares > 0:
-            sell_num = int(current_shares * sell_pct)
-            sell_amount = self.state[index + 1] * sell_num * (1 - self.sell_cost_pct[index])
-            
-            # Update portfolio state
-            self.state[0] += sell_amount  # Add cash
-            self.state[index + self.stock_dim + 1] -= sell_num  # Remove shares
-            self.cost += self.state[index + 1] * sell_num * self.sell_cost_pct[index]
-            self.trades += 1
-            return sell_num
-        return 0
+        if self.turbulence_threshold is not None:
+            if self.turbulence >= self.turbulence_threshold:
+                if self.state[index + 1] > 0:
+                    # Sell only if the price is > 0 (no missing data in this particular date)
+                    # if turbulence goes over threshold, just clear out all positions
+                    if self.state[index + self.stock_dim + 1] > 0:
+                        # Sell only if current asset is > 0
+                        sell_num_shares = self.state[index + self.stock_dim + 1]
+                        sell_amount = (
+                            self.state[index + 1]
+                            * sell_num_shares
+                            * (1 - self.sell_cost_pct[index])
+                        )
+                        # update balance
+                        self.state[0] += sell_amount
+                        self.state[index + self.stock_dim + 1] = 0
+                        self.cost += (
+                            self.state[index + 1]
+                            * sell_num_shares
+                            * self.sell_cost_pct[index]
+                        )
+                        self.trades += 1
+                    else:
+                        sell_num_shares = 0
+                else:
+                    sell_num_shares = 0
+            else:
+                sell_num_shares = _do_sell_normal()
+        else:
+            sell_num_shares = _do_sell_normal()
+        return sell_num_shares
+        
 
     def _buy_stock(self, index, action_type):
         """Execute buy action based on discrete action type
@@ -878,29 +1051,53 @@ class Disc7Env(Disc5Env):
         Returns:
             Number of shares bought
         """
-        # Map action to buy percentage
-        buy_pct = {
-            0: 0.75,
-            1: 0.50,
-            2: 0.25
-        }.get(action_type, 0.0)
-        
-        current_shares = self.state[index + self.stock_dim + 1]
-        available_cash = self.state[0]
-        price = self.state[index + 1] * (1 + self.buy_cost_pct[index])
-        
-        # Calculate target shares
-        target_shares = int(current_shares * (1 + buy_pct))
-        buy_num = max(0, target_shares - current_shares)
-        
-        if buy_num > 0 and available_cash >= price * buy_num:
-            self.state[0] -= price * buy_num  # Deduct cash
-            self.state[index + self.stock_dim + 1] += buy_num  # Add shares
-            self.cost += self.state[index + 1] * buy_num * self.buy_cost_pct[index]
-            self.trades += 1
-            return buy_num
-        return 0
+        def _do_buy():
+            if (
+                self.state[index + 2 * self.stock_dim + 1] != True
+            ):  # check if the stock is able to buy
+                # if self.state[index + 1] >0:
+                # Buy only if the price is > 0 (no missing data in this particular date)
+                available_amount = self.state[0] // (
+                    self.state[index + 1] * (1 + self.buy_cost_pct[index])
+                )  # when buying stocks, we should consider the cost of trading when calculating available_amount, or we may be have cash<0
+                # self.logger.info('available_amount:{}'.format(available_amount))
+                
+                # update balance
+                # Map action to buy percentage
+                buy_pct = {
+                    0: 0.75,
+                    1: 0.50,
+                    2: 0.25
+                }.get(action_type, 0.0)
+                buy_num_shares = min(available_amount, int(self.hmax * buy_pct))
+                buy_amount = (
+                    self.state[index + 1]
+                    * buy_num_shares
+                    * (1 + self.buy_cost_pct[index])
+                )
+                self.state[0] -= buy_amount
 
+                self.state[index + self.stock_dim + 1] += buy_num_shares
+
+                self.cost += (
+                    self.state[index + 1] * buy_num_shares * self.buy_cost_pct[index]
+                )
+                self.trades += 1
+                return buy_num_shares
+            else: return 0
+                
+        # perform buy action based on the sign of the action
+        if self.turbulence_threshold is None:
+            buy_num_shares = _do_buy()
+        else:
+            if self.turbulence < self.turbulence_threshold:
+                buy_num_shares = _do_buy()
+            else:
+                buy_num_shares = 0
+                pass
+
+        return buy_num_shares
+        
     def step(self, action):
         """
         Execute one market step with discrete action
@@ -918,31 +1115,39 @@ class Disc7Env(Disc5Env):
         
         if self.terminal:
             return self._handle_terminal_state()
-            
-        begin_total_asset = self._calculate_total_asset()
 
         # Force sell 75% if turbulence exceeds threshold
         if self.turbulence_threshold and self.turbulence >= self.turbulence_threshold:
-            action = 6  # Force maximum sell
-
+            action = 7  # Force maximum sell
+        begin_total_asset = self._calculate_total_asset()
+        
         # Process action for each stock
         for index in range(self.stock_dim):
             if 0 <= action <= 2:  # Buy actions
-                self._buy_stock(index, action)
-            elif 4 <= action <= 6:  # Sell actions
-                self._sell_stock(index, action)
+                num_shares = self._buy_stock(index, action)
+            elif 4 <= action <= 7:  # Sell actions
+                num_shares = self._sell_stock(index, action)
             # Action 3: Hold (no operation)
+            else: num_shares = 0
+        self.actions_memory.append(num_shares)
 
         # Update market state
         self.day += 1
         self.data = self.df.iloc[self.day, :]
+        if self.turbulence_threshold is not None:
+            if len(self.df.tic.unique()) == 1:
+                self.turbulence = self.data[self.risk_indicator_col]
+            elif len(self.df.tic.unique()) > 1:
+                self.turbulence = self.data[self.risk_indicator_col].values[0]
         self.state = self._update_state()
 
         # Calculate rewards
         end_total_asset = self._calculate_total_asset()
-        self.reward = (end_total_asset - begin_total_asset) * self.reward_scaling
+        self.reward = end_total_asset - begin_total_asset
         self._update_memories(end_total_asset)
-
+        self.reward *= self.reward_scaling
+        self.state_memory.append(
+                self.state
+            )  # add current state in state_recorder for each step
         return self.state, self.reward, self.terminal, False, {}
-
 
