@@ -73,9 +73,11 @@ def test(
     }
     # environment 초기화 => stock trading simulation을 위한 세팅 완료
     e_test_gym = env(df = dataset, model_name=model_name, risk_indicator_col='vix', mode='test', logger=logger, **env_kwargs,**extra_env_kwargs)
+    #OpenAI Gym의 스타일로 환경 변환
+    env_instance, _ = e_test_gym.get_sb_env()
 
     episode_total_assets = DRLAgent.DRL_prediction_load_from_file(
-        model_name=model_name, environment=e_test_gym, cwd=model_path+'/'+model_name
+        model_name=model_name, environment=env_instance, cwd=model_path+'/'+model_name
     )
     return episode_total_assets     # 각 단계 별 거래 수행 후 자산 리스트
 

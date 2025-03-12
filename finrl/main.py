@@ -10,6 +10,7 @@ import logging
 
 import init_paths
 
+from finrl.config import MODEL_PATH
 from finrl.config import GPU_ID
 from finrl.config import DATA_SAVE_DIR
 from finrl.config import INDICATORS
@@ -119,7 +120,7 @@ def main() -> int:
             technical_indicator_list=INDICATORS,
             env=ENV,
             model_name=MODEL, # DQN, Double DQN, Dueling DQN, A2C, PPO
-            model_path = "./trained",    # 모델이 저장된 폴더 이름
+            model_path = MODEL_PATH,    # 모델이 저장된 폴더 이름
             env_kwargs=env_kwargs,
             logger=logger,
         )

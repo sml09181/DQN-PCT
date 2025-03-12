@@ -7,14 +7,16 @@ import shutil
 from finrl.meta.env_stock_trading.env_stocktrading import *
 
 # general setting 
-GPU_ID = 0 # int, str 모두 가능 
-FEATURE = 'BaseIPO' # BaseIPO, Base
-DATASET = '451760.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
+GPU_ID = 1 # int, str 모두 가능 
+FEATURE = 'Base' # BaseIPO, Base
+DATASET = '372320.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
 MODEL = 'ppo' # ppo, a2c, dqn
 if MODEL in ['a2c', 'ppo']: ENV = ContEnv
 else: ENV = Disc7Env # Disc3Env, Disc5Env, Disc7Env
 
-WORKING_ROOT = '/data/sujin/sujin/GlobalStockAnalyzer/' # NOTE: change to your name
+MODEL_PATH = '/data/sujin/eunsang/GlobalStockAnalyzer/results/372320/ppo/0312_1604/trained'
+
+WORKING_ROOT = '/data/sujin/eunsang/GlobalStockAnalyzer/' # NOTE: change to your name
 TIMESTAMP = time.strftime('%m%d_%H%M')
 RESULTS_ROOT = os.path.join(WORKING_ROOT, f'results/{DATASET[:-4]}/{MODEL}/{TIMESTAMP}')
 
@@ -49,11 +51,11 @@ INDICATORS = [
 # DQN, Double DQN, Dueling DQN, A2C, PPO
 A2C_PARAMS = {"n_steps": 5, "ent_coef": 0.01, "learning_rate": 0.0007}
 PPO_PARAMS = {
-    "n_steps": 2048,
+    "n_steps": 1024,
     "ent_coef": 0.01,
     "learning_rate": 0.00025, # 0.00025
     "batch_size": 64,
-    "n_epochs": 10,
+    "n_epochs": 20,
 }
 DQN_PARAMS = {
     "learning_rate": 0.00005, # 0.0001
@@ -74,6 +76,8 @@ AGENT_DICT = {
     'a2c': PPO_PARAMS, 
     'dqn': DQN_PARAMS, 
 }
+
+# 
 AGENT_PARAMS = AGENT_DICT.get(MODEL)
 
 # date format: '%Y-%m-%d'
