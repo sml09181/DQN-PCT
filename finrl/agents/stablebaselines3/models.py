@@ -167,23 +167,24 @@ class DRLAgent:
         # test on the testing env
         state = environment.reset()
         episode_returns = []  # the cumulative_return / initial_account
-        episode_total_assets = [environment.initial_total_asset]
+        episode_total_assets = [environment.envs[0].initial_amount]
         done = False
+        
         while not done:
             action = model.predict(state, deterministic=deterministic)[0]
             state, reward, done, _ = environment.step(action)
-
+            
             total_asset = (
-                environment.amount
-                + (environment.price_ary[environment.day] * environment.stocks).sum()
+                environment.envs[0].asset_memory[environment.envs[0].day]
             )
             episode_total_assets.append(total_asset)
-            episode_return = total_asset / environment.initial_total_asset
+            episode_return = total_asset / environment.envs[0].initial_amount
             episode_returns.append(episode_return)
 
-        print("episode_return", episode_return)
+        print("episode_return", episode_returns[-2])
+        print("final")
         print("Test Finished!")
-        return episode_total_assets
+        return episode_total_assets[:-1]
 
 
 class DRLEnsembleAgent:
