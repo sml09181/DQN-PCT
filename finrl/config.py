@@ -7,18 +7,18 @@ import importlib.util
 from finrl.meta.env_stock_trading.env_stocktrading import *
 
 # general setting 
-GPU_ID = 3 # int, str 모두 가능 
-MODEL_PATH = '/data/sujin/eunsang/GlobalStockAnalyzer/results/372320/ppo/0311_1518' # Train: ''
-WORKING_ROOT = '/data/sujin/eunsang/GlobalStockAnalyzer/' # NOTE: change to your name
+GPU_ID = 1 # int, str 모두 가능 
+MODEL_PATH = '' # Train: ''
+WORKING_ROOT = '/data/sujin/sujin/GlobalStockAnalyzer/' # NOTE: change to your name
 # python main.py --mode=train
 # python main.py --mode=test
 
 # For Train (ignore when test mode)
 if len(MODEL_PATH)==0:
     FEATURE = 'BaseIPO' # BaseIPO, Base
-    DATASET = '372320.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
+    DATASET = '451760.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
     TIMESTAMP = time.strftime('%m%d_%H%M%S')
-    MODEL = 'ppo' # ppo, a2c, dqn3, dqn5, dqn7
+    MODEL = 'dqn5' # ppo, a2c, dqn3, dqn5, dqn7
     RESULTS_ROOT = os.path.join(WORKING_ROOT, f'results/{DATASET[:-4]}/{MODEL}/{TIMESTAMP}')
 # For Test
 # MODEL이나 ENV 따로 설정 안해도 됨    
@@ -88,11 +88,11 @@ PPO_PARAMS = {
 DQN_PARAMS = {
     "learning_rate": 0.0001, # 0.0001
     "buffer_size": 1000000, 
-    "learning_starts": 10, 
+    "learning_starts": 50, 
     "batch_size": 64,
     "tau": 1.0,
     "gamma": 0.99,
-    "target_update_interval": 800, # 10000
+    "target_update_interval": 1000, # 10000
     # exploration_fraction=0.1, 
     # exploration_initial_eps=1.0, 
     # exploration_final_eps=0.05, 
@@ -112,7 +112,7 @@ AGENT_PARAMS = AGENT_DICT.get(MODEL)
 TRAIN_START_DATE = "2023-11-09"  # bug fix: set Monday right, start date set 2014-01-01 ValueError: all the input array dimensions for the concatenation axis must match exactly, but along dimension 0, the array at index 0 has size 1658 and the array at index 1 has size 1657
 TRAIN_END_DATE = "2024-03-25" # 여기만 수정하면 됨(아현) 참고로 이 날은 포함이 안 되더라
 
-TEST_START_DATE = "2024-03-25" 
+TEST_START_DATE = "2023-03-25" 
 TEST_END_DATE = "2024-03-31"
 
 TRADE_START_DATE = "2021-11-01"

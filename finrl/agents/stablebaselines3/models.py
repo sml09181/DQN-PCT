@@ -199,7 +199,7 @@ class DRLAgent:
             )
         print("sharpe", sharpe_ratio)
         print("end total asset", episode_total_assets[-1])
-        return episode_total_assets
+        return episode_total_assets, sharpe_ratio
 
 
 class DRLEnsembleAgent:
