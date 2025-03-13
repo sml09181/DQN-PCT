@@ -100,12 +100,11 @@ DQN_PARAMS = {
     "gamma": 0.99,
     "target_update_interval": 1000, # 10000
 }
-# Disc5Env: pct1, pct2만 사용 (pct2=1 권장)
-# Disc7Env: pct1, pct2, pct3 사용
+# Disc5Env: pct1, pct2만 사용 (default: 0.5, 1.0 / pct2=1 권장)
+# Disc7Env: pct1, pct2, pct3 사용 (default: 0.5, 0.7, 0.9)
 PCT1 = 0.5 # 0.5 
 PCT2 = 0.75 # 1
-PCT3 = 1 # 1
-
+PCT3 = 1 # 1 # Disc5Env일 때는 아무 값으로 둬도 됨 (읽히기만 하고 코드에서 안 쓰임)
 # action: Discrete value (0-6)
 #     0: Buy (pct3)% more of current holdings for all stocks
 #     1: Buy (pct2)% more of current holdings for all stocks 
