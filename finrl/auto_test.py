@@ -18,7 +18,7 @@ import init_paths
 from finrl.meta.env_stock_trading.env_stocktrading import *
 
 GPU_ID = "1"
-folder_path = "/data/sujin/sujin/GlobalStockAnalyzer/results/451760/ppo"
+folder_path = "/data/sujin/sujin/GlobalStockAnalyzer/results/451760/dqn7"
 results_roots = [os.path.join(folder_path, f) for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]
 #print(results_roots)
 os.environ["CUDA_VISIBLE_DEVICES"] = str(GPU_ID)
@@ -42,8 +42,6 @@ def extract_last_values(log_file):
             last_sharpe = float(sharpe_match.group(1))
 
     return last_end_total_asset, last_sharpe
-
-
 
 def main(result_root) -> int:
     from finrl.config import INDICATORS
@@ -79,9 +77,41 @@ def main(result_root) -> int:
         'dqn': getattr(config, "DQN_PARAMS", None), 
     }
     PARAMS = AGENT_DICT.get(MODEL)
+    
+    if result_root.split('/')[7] == "dqn5":
+        #PARAMS['env'] = result_root.split('/')[7]
+        PCT1 = getattr(config, "pct1", 0.5)
+        PCT2 = getattr(config, "pct2", 1)
+        PCT3 = None
+        PARAMS["pct1"] = PCT1
+        PARAMS["pct2"] = PCT2
+        PARAMS["pct3"] = PCT3
+    elif result_root.split('/')[7] == "dqn7":
+        #PARAMS['env'] = result_root.split('/')[7]
+        PCT1 = getattr(config, "pct1", 0.5)
+        PCT2 = getattr(config, "pct2", 0.7)
+        PCT3 = getattr(config, "pct3", 0.9)
+        PARAMS["pct1"] = PCT1
+        PARAMS["pct2"] = PCT2
+        PARAMS["pct3"] = PCT3
+    elif result_root.split('/')[7] == "dqn3":
+        #PARAMS['env'] = result_root.split('/')[7]
+        PCT1 = None
+        PCT2 = None
+        PCT3 = None
+        PARAMS["pct1"] = PCT1
+        PARAMS["pct2"] = PCT2
+        PARAMS["pct3"] = PCT3
+    else:
+        PCT1 = None
+        PCT2 = None
+        PCT3 = None
+        
+        
     MODEL_PATH = str(os.path.join(result_root, "trained", f"{MODEL}.zip"))
     #MODEL_PATH = "/data/sujin/sujin/GlobalStockAnalyzer/results/451760/a2c/0313_111055/trained/a2c.zip"
-    if not os.path.exists(MODEL_PATH): return None, None, None, None, None, None
+    if not os.path.exists(MODEL_PATH): 
+        return None, None, None, None, None, None
     #exit(-1)
     #MODEL_PATH = "/data/sujin/sujin/GlobalStockAnalyzer/results/451760/a2c/0313_110955/trained/a2c.zip"
 
@@ -92,6 +122,9 @@ def main(result_root) -> int:
         {"hmax": 100,                           #한 번에 사고팔 수 있는 최대 주
             "initial_amount": 1000000,       # 초기 자본
             "reward_scaling": 1e-4,        #보상 스케일링 (보상이 과도하게 커지는 것 방지)
+            "pct1": PCT1,
+            "pct2": PCT2,
+            "pct3": PCT3,
         }
     )
 
@@ -104,7 +137,7 @@ def main(result_root) -> int:
         env_kwargs=env_kwargs,
         logger=None,
     )
-    print("**", account_value_erl, sharpe_ratio)
+    print(account_value_erl, sharpe_ratio)
     
     
     log_file = os.path.join(result_root, 'log.txt')
@@ -132,7 +165,6 @@ if __name__ == "__main__":
         temp.update({'results_path': result_root})
         results[matched_model].append(temp)
         # except: continue
-    print(results)
     results = {k: v for k, v in results.items() if len(v)}
     
     for model in model_names:

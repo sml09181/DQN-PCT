@@ -17,9 +17,10 @@ WORKING_ROOT = '/data/sujin/sujin/GlobalStockAnalyzer/' # NOTE: change to your n
 if len(MODEL_PATH)==0:
     FEATURE = 'BaseIPO' # BaseIPO, Base
     DATASET = '451760.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
-    TIMESTAMP = time.strftime('%m%d_%H%M%S')
-    MODEL = 'dqn5' # ppo, a2c, dqn3, dqn5, dqn7
+    TIMESTAMP = time.strftime('%m%d_%H:%M:%S')
+    MODEL = 'dqn7' # ppo, a2c, dqn3, dqn5, dqn7
     RESULTS_ROOT = os.path.join(WORKING_ROOT, f'results/{DATASET[:-4]}/{MODEL}/{TIMESTAMP}')
+    
 # For Test
 # MODEL이나 ENV 따로 설정 안해도 됨    
 else:
@@ -38,7 +39,12 @@ else:
     MODEL = MODEL_PATH.split('/')[7]
     RESULTS_ROOT = os.path.join(MODEL_PATH, "test")
     if not MODEL_PATH.endswith(f"{MODEL[:3]}.zip"): MODEL_PATH = os.path.join(MODEL_PATH, f"trained/{MODEL[:3]}.zip")
-     
+INITIAL_N_STOCKS = {
+        '372320.csv': 234,
+        '413640.csv':360,
+        '446540.csv':975,
+        '451760.csv':208,
+    }.get(DATASET)     
 if MODEL in ['a2c', 'ppo']: ENV = ContEnv
 else: 
     ENV = {
@@ -49,7 +55,7 @@ else:
     assert ENV is not None
     MODEL = MODEL[:-1]
 
-if not os.path.exists(RESULTS_ROOT):
+if not os.path.exists(RESULTS_ROOT) and len(MODEL_PATH)==0:
     os.makedirs(f"{RESULTS_ROOT}/plots")
     os.makedirs(f"{RESULTS_ROOT}/actions")
     os.makedirs(f"{RESULTS_ROOT}/total_value")
@@ -86,19 +92,34 @@ PPO_PARAMS = {
     "n_epochs": 20,
 }
 DQN_PARAMS = {
-    "learning_rate": 0.0001, # 0.0001
-    "buffer_size": 1000000, 
-    "learning_starts": 50, 
+    "learning_rate": 0.0002, # 0.0001
+    "buffer_size": 1000000, # 1000000
+    "learning_starts": 10, 
     "batch_size": 64,
     "tau": 1.0,
     "gamma": 0.99,
     "target_update_interval": 1000, # 10000
-    # exploration_fraction=0.1, 
-    # exploration_initial_eps=1.0, 
-    # exploration_final_eps=0.05, 
-    # max_grad_norm=10, 
-    # stats_window_size=100, 
 }
+# Disc5Env: pct1, pct2만 사용 (pct2=1 권장)
+# Disc7Env: pct1, pct2, pct3 사용
+PCT1 = 0.5 # 0.5 
+PCT2 = 0.75 # 1
+PCT3 = 1 # 1
+
+# action: Discrete value (0-6)
+#     0: Buy (pct3)% more of current holdings for all stocks
+#     1: Buy (pct2)% more of current holdings for all stocks 
+#     2: Buy (pct)1% more of current holdings for all stocks
+#     3: Hold all positions
+#     4: Sell (pct1)% of current holdings for all stocks
+#     5: Sell (pct2)% of current holdings for all stocks
+#     6: Sell (pct3)% of current holdings for all stocks
+
+# exploration_fraction=0.1, 
+# exploration_initial_eps=1.0, 
+# exploration_final_eps=0.05, 
+# max_grad_norm=10, 
+# stats_window_size=100, 
 AGENT_DICT = {
     'ppo': PPO_PARAMS, 
     'a2c': A2C_PARAMS, 

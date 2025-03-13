@@ -25,7 +25,8 @@ def train(
     agent_kwargs,
     env_kwargs,
     logger,
-    if_vix=True
+    init_n_stocks,
+    if_vix=True,
 ):
     
     fe = FeatureEngineer(use_technical_indicator=True,
@@ -67,7 +68,7 @@ def train(
     # 주식 매수/매도 시 수수료 비율. 0.001=0.1%
     buy_cost_list = sell_cost_list = [0.00015] * stock_dimension
     # 초기 주식 보유량
-    num_stock_shares = [0] * stock_dimension
+    num_stock_shares = [init_n_stocks] * stock_dimension
 
     extra_env_kwargs = {
         "num_stock_shares": num_stock_shares,   # 초기 주식 보유량

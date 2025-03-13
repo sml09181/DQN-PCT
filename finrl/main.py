@@ -29,6 +29,7 @@ from finrl.config import MODEL
 from finrl.config import ENV
 from finrl.config import AGENT_PARAMS
 from finrl.config_tickers import DOW_30_TICKER
+from finrl.config import INITIAL_N_STOCKS
 #from finrl.meta.env_stock_trading.env_stocktrading import 
 
 def build_parser():
@@ -78,11 +79,15 @@ def main() -> int:
 
     if options.mode == "train":
         from finrl import train
+        from finrl.config import PCT1, PCT2, PCT3
         dataset = pd.read_csv(f"/data/sujin/IPO/data/{FEATURE}/{DATASET}", encoding='euc-kr')
         env_kwargs = (
             {"hmax": 100,                           #한 번에 사고팔 수 있는 최대 주
-             "initial_amount": 1000000,       # 초기 자본
-             "reward_scaling": 1e-4,        #보상 스케일링 (보상이 과도하게 커지는 것 방지)
+            "initial_amount": 1000000,       # 초기 자본
+            "reward_scaling": 1e-4,        #보상 스케일링 (보상이 과도하게 커지는 것 방지)
+            "pct1": PCT1,
+            "pct2": PCT2,
+            "pct3": PCT3,
             }
         )
         agent_kwargs = (
@@ -100,6 +105,7 @@ def main() -> int:
             agent_kwargs = agent_kwargs,
             env_kwargs=env_kwargs,
             logger=logger,
+            init_n_stocks = INITIAL_N_STOCKS,
         )
     elif options.mode == "test":
         from finrl import test

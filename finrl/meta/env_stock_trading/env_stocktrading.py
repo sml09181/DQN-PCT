@@ -45,6 +45,9 @@ class ContEnv(gym.Env):
         mode="",
         iteration="",
         logger=None,
+        pct1=None,
+        pct2=None,
+        pct3=None
     ):
         self.day = day
         self.df = df
@@ -74,6 +77,9 @@ class ContEnv(gym.Env):
         self.mode = mode
         self.iteration = iteration
         self.logger = logger
+        self.pct1 = pct1
+        self.pct2 = pct2
+        self.pct3 = pct3
         # initalize state
         self.state = self._initiate_state()
 
@@ -710,8 +716,6 @@ class Disc5Env(ContEnv):
         super().__init__(*args, **kwargs)
         # Set discrete action space (0-4)
         self.action_space = spaces.Discrete(5)
-        self.pct1 = 0.5
-        self.pct2 = 1.
         
     def _sell_stock(self, index, action_type):
         """Execute sell action based on discrete action type
@@ -983,9 +987,6 @@ class Disc7Env(Disc5Env):
         super().__init__(*args, **kwargs)
         # Set discrete action space (0-6)
         self.action_space = spaces.Discrete(7)
-        self.pct1 = 0.5
-        self.pct2 = 0.7
-        self.pct3 = 0.9
     
     def _sell_stock(self, index, action_type):
         """Execute sell action based on discrete action type
