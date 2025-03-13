@@ -79,20 +79,20 @@ INDICATORS = [
 # DQN, Double DQN, Dueling DQN, A2C, PPO
 A2C_PARAMS = {"n_steps": 5, "ent_coef": 0.01, "learning_rate": 0.0007}
 PPO_PARAMS = {
-    "n_steps": 1024,
+    "n_steps": 2048,
     "ent_coef": 0.01,
     "learning_rate": 0.00025, # 0.00025
     "batch_size": 64,
     "n_epochs": 20,
 }
 DQN_PARAMS = {
-    "learning_rate": 0.00005, # 0.0001
+    "learning_rate": 0.0002, # 0.0001
     "buffer_size": 1000000, 
-    "learning_starts": 1, 
+    "learning_starts": 10, 
     "batch_size": 64,
     "tau": 1.0,
     "gamma": 0.99,
-    "target_update_interval": 200, # 10000
+    "target_update_interval": 1000, # 10000
     # exploration_fraction=0.1, 
     # exploration_initial_eps=1.0, 
     # exploration_final_eps=0.05, 
