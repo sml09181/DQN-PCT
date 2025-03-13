@@ -710,6 +710,8 @@ class Disc5Env(ContEnv):
         super().__init__(*args, **kwargs)
         # Set discrete action space (0-4)
         self.action_space = spaces.Discrete(5)
+        self.pct1 = 0.5
+        self.pct2 = 1.
         
     def _sell_stock(self, index, action_type):
         """Execute sell action based on discrete action type
@@ -722,8 +724,8 @@ class Disc5Env(ContEnv):
         def _do_sell_normal():
             current_shares = self.state[index + self.stock_dim + 1]
             sell_pct_dict = {
-                3: 0.3,
-                4: 0.7,
+                3: self.pct1,
+                4: self.pct2,
                 5: 1, # if turbulence goes over threshold, just clear out all positions 
             }
             sell_pct = sell_pct_dict.get(action_type, 0)
@@ -796,7 +798,11 @@ class Disc5Env(ContEnv):
                 # self.logger.info('available_amount:{}'.format(available_amount))
                 
                 # update balance
-                buy_pct = 0.7 if action_type == 0 else 0.3 if action_type == 1 else 0.0
+                buy_pct_dict = {
+                    0: self.pct2,
+                    1: self.pct1,
+                }
+                buy_pct = buy_pct_dict.get(action_type, 0)
                 buy_num_shares = min(available_amount, int(self.hmax * buy_pct))
                 buy_amount = (
                     self.state[index + 1]
@@ -977,6 +983,9 @@ class Disc7Env(Disc5Env):
         super().__init__(*args, **kwargs)
         # Set discrete action space (0-6)
         self.action_space = spaces.Discrete(7)
+        self.pct1 = 0.5
+        self.pct2 = 0.7
+        self.pct3 = 0.9
     
     def _sell_stock(self, index, action_type):
         """Execute sell action based on discrete action type
@@ -989,9 +998,9 @@ class Disc7Env(Disc5Env):
         def _do_sell_normal():
             current_shares = self.state[index + self.stock_dim + 1]
             sell_pct = {
-                4: 0.25,
-                5: 0.50,
-                6: 0.75,
+                4: self.pct1,
+                5: self.pct2,
+                6: self.pct3,
                 7: 1,
             }.get(action_type, 0.0)
             if (
@@ -1065,9 +1074,9 @@ class Disc7Env(Disc5Env):
                 # update balance
                 # Map action to buy percentage
                 buy_pct = {
-                    0: 0.75,
-                    1: 0.50,
-                    2: 0.25
+                    0: self.pct3,
+                    1: self.pct2,
+                    2: self.pct1
                 }.get(action_type, 0.0)
                 buy_num_shares = min(available_amount, int(self.hmax * buy_pct))
                 buy_amount = (

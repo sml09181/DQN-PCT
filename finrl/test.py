@@ -77,7 +77,7 @@ def test(
     env_instance, _ = e_test_gym.get_sb_env()
 
     episode_total_assets = DRLAgent.DRL_prediction_load_from_file(
-        model_name=model_name, environment=env_instance, cwd=model_path+'/'+model_name
+        model_name=model_name, environment=env_instance, cwd=model_path
     )
     return episode_total_assets     # 각 단계 별 거래 수행 후 자산 리스트
 
