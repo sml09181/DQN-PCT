@@ -181,9 +181,8 @@ class DRLAgent:
             episode_total_assets.append(total_asset)
             episode_return = total_asset / environment.envs[0].initial_amount
             episode_returns.append(episode_return)
-        print(episode_returns)
-        print(episode_total_assets)
-        print("episode_return", episode_returns[-1])
+        
+        print("episode_return", episode_returns[-2])
         print("final")
         print("Test Finished!")
         return episode_total_assets[:-1]
