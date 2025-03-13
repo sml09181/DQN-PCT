@@ -14,7 +14,6 @@ from finrl.config import MODEL_PATH
 from finrl.config import GPU_ID
 from finrl.config import DATA_SAVE_DIR
 from finrl.config import INDICATORS
-from finrl.config import RESULTS_DIR
 from finrl.config import RESULTS_ROOT
 from finrl.config import TENSORBOARD_LOG_DIR
 from finrl.config import TEST_END_DATE

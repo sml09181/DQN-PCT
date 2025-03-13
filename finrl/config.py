@@ -1,24 +1,53 @@
-# directory
 from __future__ import annotations
 import os
 import time
 import shutil
+import importlib.util
 
 from finrl.meta.env_stock_trading.env_stocktrading import *
 
 # general setting 
 GPU_ID = 1 # int, str 모두 가능 
-FEATURE = 'Base' # BaseIPO, Base
-DATASET = '372320.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
-MODEL = 'ppo' # ppo, a2c, dqn
+MODEL_PATH = '/data/sujin/sujin/GlobalStockAnalyzer/results/451760/ppo/0311_2221' # Train: ''
+WORKING_ROOT = '/data/sujin/sujin/GlobalStockAnalyzer/' # NOTE: change to your name
+# python main.py --mode=train
+# python main.py --mode=test
+
+# For Train (ignore when test mode)
+if len(MODEL_PATH)==0:
+    FEATURE = 'Base' # BaseIPO, Base
+    DATASET = '372320.csv' #372320.csv, 413640.csv, 446540.csv, 451760.csv
+    TIMESTAMP = time.strftime('%m%d_%H%M%S')
+    MODEL = 'dqn5' # ppo, a2c, dqn3, dqn5, dqn7
+    RESULTS_ROOT = os.path.join(WORKING_ROOT, f'results/{DATASET[:-4]}/{MODEL}/{TIMESTAMP}')
+# For Test
+# MODEL이나 ENV 따로 설정 안해도 됨    
+else:
+    def load_config(config_path):
+        spec = importlib.util.spec_from_file_location("config", config_path)
+        config = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(config)
+        return config
+    config_path = os.path.join(MODEL_PATH, "config.py")
+    config = load_config(config_path)
+    FEATURE = getattr(config, "FEATURE", None)
+    DATASET = getattr(config, "DATASET", None)
+    print("FEATURE:", getattr(config, "FEATURE", None))
+    print("DATASET:", getattr(config, "DATASET", None))
+
+    MODEL = MODEL_PATH.split('/')[7]
+    RESULTS_ROOT = os.path.join(MODEL_PATH, "test")
+    if not MODEL_PATH.endswith(f"{MODEL[:3]}.zip"): MODEL_PATH = os.path.join(MODEL_PATH, f"trained/{MODEL[:3]}.zip")
+     
 if MODEL in ['a2c', 'ppo']: ENV = ContEnv
-else: ENV = Disc7Env # Disc3Env, Disc5Env, Disc7Env
-
-MODEL_PATH = '/data/sujin/eunsang/GlobalStockAnalyzer/results/372320/ppo/0312_1604/trained'
-
-WORKING_ROOT = '/data/sujin/eunsang/GlobalStockAnalyzer/' # NOTE: change to your name
-TIMESTAMP = time.strftime('%m%d_%H%M')
-RESULTS_ROOT = os.path.join(WORKING_ROOT, f'results/{DATASET[:-4]}/{MODEL}/{TIMESTAMP}')
+else: 
+    ENV = {
+        'dqn3': Disc3Env, # Disc3Env, Disc5Env, Disc7Env
+        'dqn5': Disc5Env,
+        'dqn7': Disc7Env,
+    }.get(MODEL)
+    assert ENV is not None
+    MODEL = MODEL[:-1]
 
 if not os.path.exists(RESULTS_ROOT):
     os.makedirs(f"{RESULTS_ROOT}/plots")
@@ -32,7 +61,6 @@ DATA_SAVE_DIR = os.path.join(RESULTS_ROOT, "datasets")
 TRAINED_MODEL_DIR = os.path.join(RESULTS_ROOT, "trained_models")
 TENSORBOARD_LOG_DIR = os.path.join(RESULTS_ROOT, "tensorboard_log")
 AGENT_LOG_DIR = os.path.join(RESULTS_ROOT, "agent_log")
-RESULTS_DIR = "results"
     
 # stockstats technical indicator column names
 # check https://pypi.org/project/stockstats/ for different names
@@ -51,20 +79,20 @@ INDICATORS = [
 # DQN, Double DQN, Dueling DQN, A2C, PPO
 A2C_PARAMS = {"n_steps": 5, "ent_coef": 0.01, "learning_rate": 0.0007}
 PPO_PARAMS = {
-    "n_steps": 1024,
+    "n_steps": 2048,
     "ent_coef": 0.01,
     "learning_rate": 0.00025, # 0.00025
     "batch_size": 64,
     "n_epochs": 20,
 }
 DQN_PARAMS = {
-    "learning_rate": 0.00005, # 0.0001
+    "learning_rate": 0.0002, # 0.0001
     "buffer_size": 1000000, 
-    "learning_starts": 1, 
+    "learning_starts": 10, 
     "batch_size": 64,
     "tau": 1.0,
     "gamma": 0.99,
-    "target_update_interval": 200, # 10000
+    "target_update_interval": 1000, # 10000
     # exploration_fraction=0.1, 
     # exploration_initial_eps=1.0, 
     # exploration_final_eps=0.05, 
@@ -73,7 +101,7 @@ DQN_PARAMS = {
 }
 AGENT_DICT = {
     'ppo': PPO_PARAMS, 
-    'a2c': PPO_PARAMS, 
+    'a2c': A2C_PARAMS, 
     'dqn': DQN_PARAMS, 
 }
 
