@@ -174,6 +174,7 @@ class DRLAgent:
         while not done:
             action = model.predict(state, deterministic=deterministic)[0]
             state, reward, done, _ = environment.step(action)
+            if done: break
             
             total_asset = (
                 environment.envs[0].asset_memory[environment.envs[0].day]
@@ -181,11 +182,24 @@ class DRLAgent:
             episode_total_assets.append(total_asset)
             episode_return = total_asset / environment.envs[0].initial_amount
             episode_returns.append(episode_return)
-        
-        print("episode_return", episode_returns[-2])
-        print("final")
+
         print("Test Finished!")
-        return episode_total_assets[:-1]
+
+        # Calculate performance metrics
+        df_total_value = pd.DataFrame(episode_total_assets, columns=["account_value"])
+        # Calculate daily returns
+        df_total_value["daily_return"] = df_total_value["account_value"].pct_change(1)
+        # Calculate Sharpe ratio
+        sharpe_ratio = None
+        if len(df_total_value) > 1 and df_total_value["daily_return"].std() != 0:
+            sharpe_ratio = (
+            (252**0.5)
+            * df_total_value["daily_return"].mean()
+            / df_total_value["daily_return"].std()
+            )
+        print("sharpe", sharpe_ratio)
+        print("end total asset", episode_total_assets[-1])
+        return episode_total_assets
 
 
 class DRLEnsembleAgent:
